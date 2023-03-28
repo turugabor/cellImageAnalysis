@@ -1,4 +1,4 @@
 # cellImageAnalysis
-#Gömöri András itt járt.
+#Gömöri András itt járt..
 
 Hello world!
