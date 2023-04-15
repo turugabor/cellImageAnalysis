@@ -9,6 +9,9 @@ from scipy import ndimage as ndi
 from skimage.segmentation import watershed
 from skimage.feature import peak_local_max
 
+from os import listdir
+from os.path import isfile, join
+
 class Image:
     
     def __init__(self, path, channel_names=None):
@@ -33,8 +36,36 @@ class Image:
     def remove_background(self):
         pass
     
+    
 class XpressImage(Image):
-    pass
+#egyelőre nem inheritál gyakorlagilag semmit. más a bemenet és más a funkció is. 
+    
+    def __init__(self, path, place):
+        self.path = path
+        self.place = place
+    
+    def load_ximage(self):   #betölt és összerak
+        #leszűrjük, hogy a mappából csak a tif file-okat vizsgáljuk
+        tifs = [f for f in listdir(self.path) if isfile(join(self.path, f)) and  f.endswith(".tif")]
+        
+        #majd kiválasztjuk belőle a megadott hely alapján a megfelelő fileokat
+        matches = [match for match in tifs if self.place in match]
+        
+        #teljes elérési utat hozunk létre a fileokhoz, 
+        for i in range(len(matches)):
+            matches[i]=join(self.path,matches[i])
+        
+        #létrehozunk egy img arrayt, majd egyesével hozzáadjuk a külön képeket
+        img=np.array(0)
+        for i in matches:
+            img=img+io.imread(i)-io.imread(i).min() #mindenhonnan levonjuk a hátteret egyesével, mivel a külön képeken eltérhet
+        self.image=img
+        
+    
+    def display_ximage(self):
+        plt.imshow(self.image)
+        plt.axis("off")
+
             
 class Detector:
     
