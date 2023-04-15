@@ -38,7 +38,7 @@ class Image:
     
     
 class XpressImage(Image):
-#egyelőre nem inheritál gyakorlagilag semmit. más a bemenet és más a funkció is. 
+
     
     def __init__(self, path, place):
         self.path = path
@@ -58,12 +58,14 @@ class XpressImage(Image):
         #létrehozunk egy img arrayt, majd egyesével hozzáadjuk a külön képeket
         img=np.array(0)
         for i in matches:
+            
             img=img+io.imread(i)-io.imread(i).min() #mindenhonnan levonjuk a hátteret egyesével, mivel a külön képeken eltérhet
+        img=np.clip(img, 0, img.max()/3)                    
         self.image=img
         
     
     def display_ximage(self):
-        plt.imshow(self.image)
+        plt.imshow(self.image, cmap='Greys')
         plt.axis("off")
 
             
