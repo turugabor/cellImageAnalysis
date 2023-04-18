@@ -34,7 +34,24 @@ class Image:
         pass
     
 class XpressImage(Image):
-    pass
+    
+    def __init__(self, path, name):
+    if path.endswith('/')==False:
+        path=path+'/'
+    self.path = path
+    self.imfiles=[]
+    self.channel_names=[]
+    for file in os.listdir(path):
+        if file.startswith(name):
+            self.imfiles.append(file)
+            self.channel_names.append(file[len(name)+1:len(name)+3])
+                
+
+    def load_image(self):
+        ims=[]
+        for file in self.imfiles:
+            ims.append(io.imread(self.path+file))
+        self.image=np.stack(ims, axis=2)
             
 class Detector:
     
