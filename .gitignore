@@ -7,6 +7,9 @@ __pycache__/
 
 data/
 
+#early tries
+test3.ipynb
+
 # C extensions
 *.so
 

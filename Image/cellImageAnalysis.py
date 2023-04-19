@@ -1,12 +1,13 @@
+import os
 import matplotlib.pyplot as plt
 from skimage import io
 import numpy as np
 
-from skimage.filters import threshold_mean
+from skimage.filters import threshold_mean, threshold_isodata
 from skimage.morphology import binary_closing, binary_opening
 from skimage.measure import label
 from scipy import ndimage as ndi
-from skimage.segmentation import watershed
+from skimage.segmentation import watershed, find_boundaries
 from skimage.feature import peak_local_max
 
 class Image:
@@ -36,15 +37,15 @@ class Image:
 class XpressImage(Image):
     
     def __init__(self, path, name):
-    if path.endswith('/')==False:
-        path=path+'/'
-    self.path = path
-    self.imfiles=[]
-    self.channel_names=[]
-    for file in os.listdir(path):
-        if file.startswith(name):
-            self.imfiles.append(file)
-            self.channel_names.append(file[len(name)+1:len(name)+3])
+        if path.endswith('/')==False:
+            path=path+'/'
+        self.path = path
+        self.imfiles=[]
+        self.channel_names=[]
+        for file in os.listdir(path):
+            if file.startswith(name):
+                self.imfiles.append(file)
+                self.channel_names.append(file[len(name)+1:len(name)+3])
                 
 
     def load_image(self):
@@ -68,7 +69,7 @@ class Detector:
         
     def detect_cells(self, image):
         
-        image_data = image[:,:,self.cell_channel]
+        image_data = image.image[:,:,self.cell_channel]
         thr = threshold_mean(image_data)
         binary = image_data > thr
         binary = binary_closing(binary, np.ones(shape=(8,8)))
@@ -77,16 +78,53 @@ class Detector:
         coords = peak_local_max(distance, footprint=np.ones((150, 150)), labels=binary)
         mask = np.zeros(distance.shape, dtype=bool)
         mask[tuple(coords.T)] = True
-        markers, _ = ndi.label(mask)
+        markers, cnum = ndi.label(mask)
         labels = watershed(-distance, markers, mask=binary)
         
-        return labels
+        image.cell_number=cnum
+        image.cell_labels=labels
+        #return labels
     
     def detect_nuclei(self, image):
-        pass
+        try:
+            labels=image.cell_labels
+        except AttributeError:
+            #print('Need cell detection first.')
+            #return
+            self.detect_cells(image)
+            labels=image.cell_labels
+        cell_num=image.cell_number        
+        nuclei = np.zeros(labels.shape, dtype=int)
+
+        for cnum in range(1,cell_num,1):
+            difim=image.image[:,:,self.nucleus_channel]-image.image[:,:,self.cell_channel]
+            #difim=image.image[:,:,1]-image.image[:,:,0]
+            difim[np.where(labels != cnum)]=0
+            thr = threshold_isodata(difim)
+            binary = difim > thr
+            
+            binary = binary_opening(binary, np.ones(shape=(4,4)))
+            binary = binary_closing(binary, np.ones(shape=(4,4)))
+            #binary = binary_opening(binary, np.ones(shape=(5,5)))
+            binary = binary_opening(binary, np.ones(shape=(16,16)))
+
+            nuclei[np.where(binary==True)]=cnum
+            print('.', end='', flush=True) 
+            
+        image.nucleus_labels=nuclei
     
     def detect_cell_borders(self, image):
-        pass            
+        try:
+            labels=image.cell_labels
+        except AttributeError:
+            #print('Need cell detection first.')
+            #return
+            self.detect_cells(image)
+            labels=image.cell_labels
+        
+        borders = find_boundaries(labels)
+        image.cell_borders=borders
+        #return borders
             
 class Experiment:
     
