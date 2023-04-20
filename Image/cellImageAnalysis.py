@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 from skimage import io
 import numpy as np
+import os
 
 from skimage.filters import threshold_mean
 from skimage.morphology import binary_closing, binary_opening
@@ -34,7 +35,22 @@ class Image:
         pass
     
 class XpressImage(Image):
-    pass
+    
+    def __init__(self, path, pos, channel_names=None):
+        super().__init__(path, channel_names)
+        self.load_separated(pos)
+        
+    def load_separated(self, pos):
+        self.selected = []
+        self.files = os.listdir(self.path)
+        for f in self.files:
+            if pos in f:
+                self.selected.append(self.path + f)
+        img = io.imread_collection(self.selected)
+        img = io.concatenate_images(img)
+        img = np.swapaxes(img, 0, 2)
+        img = np.swapaxes(img, 0, 1)
+        self.image = img
             
 class Detector:
     
@@ -66,10 +82,12 @@ class Detector:
         return labels
     
     def detect_nuclei(self, image):
+        
         pass
     
     def detect_cell_borders(self, image):
-        pass            
+        
+        pass
             
 class Experiment:
     
