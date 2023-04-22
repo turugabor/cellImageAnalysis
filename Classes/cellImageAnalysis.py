@@ -70,11 +70,13 @@ class XpressImage(Image):
     
     def display_image(self):
         super().display_image()
-        #plt.imshow(self.image)
-        #plt.axis("off")
+        
+    def display_ximage(self):    
+        plt.imshow(self.image)
+        plt.axis("off")
     
-    def save(self):
-        pass
+    def save(self, path):
+        io.imsave(path+"/"+self.place+".tif", self.image)
 
             
 class Detector:
