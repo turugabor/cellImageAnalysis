@@ -46,8 +46,8 @@ class Image:
 class XpressImage(Image):
 
     
-    def __init__(self, path, place):
-        self.path = path
+    def __init__(self, path, place, channel_names=None):
+        super().__init__(path)
         self.place = place
     
     def load_ximage(self):   #betölt és összerak
@@ -61,18 +61,20 @@ class XpressImage(Image):
         for i in range(len(matches)):
             matches[i]=join(self.path,matches[i])
         
-        #létrehozunk egy img arrayt, majd egyesével hozzáadjuk a külön képeket
-        img=np.array(0)
-        for i in matches:
-            
-            img=img+io.imread(i)-io.imread(i).min() #mindenhonnan levonjuk a hátteret egyesével, mivel a külön képeken eltérhet
-        img=np.clip(img, 0, img.max()/3)                    
+        
+        #img megkapja az elérési utakat, összerakja az array-t
+        img = io.imread_collection(matches)
+        img = (np.stack(img, axis=2))*255/65535
         self.image=img
         
     
-    def display_ximage(self):
-        plt.imshow(self.image, cmap='Greys')
-        plt.axis("off")
+    def display_image(self):
+        super().display_image()
+        #plt.imshow(self.image)
+        #plt.axis("off")
+    
+    def save(self):
+        pass
 
             
 class Detector:
