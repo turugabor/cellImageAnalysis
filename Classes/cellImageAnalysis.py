@@ -34,7 +34,7 @@ class Image:
         channels = self.image.shape[-1]
         for i in range(channels):
             plt.subplot(1, channels, i+1)
-            plt.imshow(self.image[:,:,i], cmap="gray") 
+            plt.imshow(self.image[:,:,i], cmap="Greys") 
             if self.channel_names != None:
                 plt.title(self.channel_names[i])
             plt.axis("off")
