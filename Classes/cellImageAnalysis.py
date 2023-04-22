@@ -20,8 +20,14 @@ class Image:
         
     def load_image(self):
         img = io.imread(self.path)
-        img = np.swapaxes(img, 0, 2)
-        img = np.swapaxes(img, 0, 1)
+        
+        if img.shape[0] <6:
+            img = np.swapaxes(img, 0, 2)
+            img = np.swapaxes(img, 0, 1)
+            
+        if img.shape[1] <6:
+            img = np.swapaxes(img, 1, 2)
+        
         self.image = img
         
     def display_image(self):
