@@ -63,8 +63,20 @@ class XpressImage(Image):
         
         
         #img megkapja az elérési utakat, összerakja az array-t
+        #/65535*255
         img = io.imread_collection(matches)
-        img = (np.stack(img, axis=2))*255/65535
+        img = (np.stack(img, axis=2))
+        
+        #jó ötletnek tűnt mindez, de ha nem teszem bele, akkor simán működik minden.
+        #levonjuk a minimum értékeket, leklippeljük 0-255-re, és konvertálunk integerré (kerekítve)
+        #mindezt külön-külön a csatornákon, mert nagy a szórás a min-max értékeikben        
+        
+        #channels=img.shape[-1]
+
+        #for i in range(channels):
+         #   img[:,:,i]= np.rint ( (np.clip( (img[:,:,i] - img[:,:,i].min() ),0,255) ) ).astype(int)
+
+        
         self.image=img
         
     
