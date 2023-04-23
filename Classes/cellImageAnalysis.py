@@ -67,7 +67,7 @@ class XpressImage(Image):
         img = io.imread_collection(matches)
         img = (np.stack(img, axis=2))
         
-        #jó ötletnek tűnt mindez, de ha nem teszem bele, akkor simán működik minden.
+        #jó ötletnek tűntek a következőek, de ha nem teszem bele, akkor simán működik minden.
         #levonjuk a minimum értékeket, leklippeljük 0-255-re, és konvertálunk integerré (kerekítve)
         #mindezt külön-külön a csatornákon, mert nagy a szórás a min-max értékeikben        
         
@@ -83,9 +83,23 @@ class XpressImage(Image):
     def display_image(self):
         super().display_image()
         
-    def display_ximage(self):    
-        plt.imshow(self.image)
+    def display_ximage(self):
+
+        #létrehozunk egy arrayt a kép dimenzióival
+        dim1=self.image.shape[0]
+        dim2=self.image.shape[1]
+        img=np.zeros((dim1,dim2))
+        
+        #a csatornákat összeadjuk
+        channels = self.image.shape[-1]
+        for i in range(channels):
+            #mindenhonnan levonjuk a hátteret egyesével, mivel a külön csatornákon eltérhet
+            img += self.image[:,:,i] - self.image[:,:,i].min() 
+            #img=np.clip(img, 0, img.max()/3)
+                
+        plt.imshow(img, cmap="Greys")
         plt.axis("off")
+    
     
     def save(self, path):
         io.imsave(path+"/"+self.place+".tif", self.image)
