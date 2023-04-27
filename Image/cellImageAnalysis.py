@@ -34,7 +34,50 @@ class Image:
         pass
     
 class XpressImage(Image):
-    pass
+    
+    #az egyik órán bemutatott megoldás, amit lemásoltam
+    
+    def __init__(self, path, place)
+    self.path = path
+    self.place = place
+    
+    def load_ximage(self)
+        tifs = [f for f in listdir(self.path) if isfile(join(self.path, f)) and f.endswith(".tif")]
+        
+        matches = [match for match in tifs if self.place in match]
+        
+        for i in range(len(matches)):
+            matches[i] = join(self.path, matches[i])
+            
+        img = np.array(0)
+        for i in matches
+        
+            img = img+io.imread(i)-io.imread(i).min()
+        img = np.clip(img, 0, img.max()/3)
+        self.image = img
+        
+    def display_ximage(self)
+        plt.imshow(self.image, cmap='Greys')
+        plt.axis("off")
+        
+    #a másik órán bemutatott megoldás, amit lemásoltam
+    
+class XpressImage2(Image)
+    def __init__(self, path, pos, channel_names=None)
+        super().__init__(path, channel_names)
+        self.load_separated(pos)
+        
+    def load_separated(self, pos)
+        self.selected = []
+        self.files = os.listdir(self.path)
+        for f in self.files:
+            if pos in f:
+                self.selected.append(self.path + f)
+        img = io.imread_collection(self.selected)
+        img = io.concatenate_images(img)
+        img = np.swapaxes(img, 0, 2)
+        img = np.swapaxes(img, 0, 1)
+        self.image = img
             
 class Detector:
     
