@@ -7,6 +7,10 @@ __pycache__/
 
 data/
 
+#tries
+test2.ipynb
+xpress image.ipynb
+
 # C extensions
 *.so
 
