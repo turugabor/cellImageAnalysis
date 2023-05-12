@@ -9,6 +9,13 @@ from scipy import ndimage as ndi
 from skimage.segmentation import watershed
 from skimage.feature import peak_local_max
 
+from os import listdir
+from os.path import isfile, join
+from skimage import data
+from skimage import color
+from skimage import morphology
+from skimage import segmentation
+
 class Image:
     
     def __init__(self, path, channel_names=None):
@@ -34,7 +41,25 @@ class Image:
         pass
     
 class XpressImage(Image):
-    pass
+    
+        def __init_(self, path, pos, channel_names=None):
+            super().__init__(path, channel_names)
+            self.load_separated(pos)
+            
+        def load_separated(self, pos):
+            self.selected = []
+            self.files = os.listdir(self.path)
+            for f in self.files:
+                if pos in f:
+                    self.selected.append(self.path + f)
+            #imgpre- a kép konkatenálás előtt
+            imgpre = io.imread_collection(self.selected)
+            img = io.concatenate_images(imgpre)
+            img = np.swapaxes(img, 0, 2)
+            img = np.swapaxes(img, 0, 1)
+            self.image = img
+
+
             
 class Detector:
     
