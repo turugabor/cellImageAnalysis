@@ -12,11 +12,16 @@ from skimage.feature import peak_local_max
 from os import listdir
 from os.path import isfile, join
 
+from skimage.morphology import binary_erosion
+
+from cellpose import models
+
 class Image:
     
     def __init__(self, path, channel_names=None):
         self.path = path
         self.channel_names = channel_names
+        self.name = ""
         
     def load_image(self):
         img = io.imread(self.path)
@@ -34,7 +39,7 @@ class Image:
         channels = self.image.shape[-1]
         for i in range(channels):
             plt.subplot(1, channels, i+1)
-            plt.imshow(self.image[:,:,i], cmap="Greys") 
+            plt.imshow(self.image[:,:,i], cmap="gray") 
             if self.channel_names != None:
                 plt.title(self.channel_names[i])
             plt.axis("off")
@@ -42,6 +47,8 @@ class Image:
     def remove_background(self):
         pass
     
+#     def save(self, path):
+#         io.imsave(path+"/"+self.place+".tif", self.image)
     
 class XpressImage(Image):
 
@@ -50,7 +57,7 @@ class XpressImage(Image):
         super().__init__(path)
         self.place = place
     
-    def load_ximage(self):   #betölt és összerak
+    def load_image(self):   #betölt és összerak
         #leszűrjük, hogy a mappából csak a tif file-okat vizsgáljuk
         tifs = [f for f in listdir(self.path) if isfile(join(self.path, f)) and  f.endswith(".tif")]
         
@@ -78,11 +85,7 @@ class XpressImage(Image):
 
         
         self.image=img
-        
-    
-    def display_image(self):
-        super().display_image()
-        
+               
     def display_ximage(self):
 
         #létrehozunk egy arrayt a kép dimenzióival
@@ -98,11 +101,7 @@ class XpressImage(Image):
             #img=np.clip(img, 0, img.max()/3)
                 
         plt.imshow(img, cmap="Greys")
-        plt.axis("off")
-    
-    
-    def save(self, path):
-        io.imsave(path+"/"+self.place+".tif", self.image)
+        plt.axis("off")  
 
             
 class Detector:
@@ -110,14 +109,7 @@ class Detector:
     def __init__(self, cell_channel=None, nucleus_channel=None):
         self.cell_channel = cell_channel
         self.nucleus_channel = nucleus_channel
-        
-        
-    def watershed(self, binary):
-        pass
-    
-    def make_binary(self, image):
-        pass
-        
+               
     def detect_cells(self, image):
         
         image_data = image[:,:,self.cell_channel]
@@ -137,18 +129,85 @@ class Detector:
     def detect_nuclei(self, image):
         pass
     
-    def detect_cell_borders(self, image):
-        pass            
+    def detect_cell_borders(self, masks):
+        """
+        Args: 
+            masks: masked image
+        Returns:
+            countour of the cells in the masks image"""
+        
+        eroded = binary_erosion(masks) 
+        return (masks>0)^eroded
+    
+class CellposeDetector(Detector):
+    
+    def __init__(self, cell_channel=None, nucleus_channel=None):
+        """Detects cell using the cellpose library
+        Args:
+            cell_channel (int): index of the cell channel in the images using zero indexing
+            nucleus_channel (int): index of the nuclear channel in the images using zero indexing"""
+        super().__init__(cell_channel, nucleus_channel)
+        
+       
+        self.channels = [0,0]
+        
+        if self.cell_channel != None:
+            self.channels[0] = self.cell_channel + 1
+        if self.nucleus_channel != None:
+            self.channels[1] = self.nucleus_channel + 1
             
+        self.cell_model = models.Cellpose(gpu=False, model_type='cyto')
+        self.nucleus_model = models.Cellpose(gpu=False, model_type='nuclei')
+
+        
+    def detect_cells(self, image, diameter=100):
+        cell_masks, __, __, __ = self.cell_model.eval(image, diameter=diameter, channels=self.channels)
+        return cell_masks
+    
+    def detect_nuclei(self, image, diameter=100):
+        nuclear_masks, __, __, __ = self.nucleus_model.eval(image, diameter=diameter, channels=self.channels)
+        return nuclear_masks
+   
+class Analyzer:
+    
+    def __init__(self):
+        pass
+    
+    def get_cell_fluorescence(self, img, masks):
+        img = img.reshape(-1,1)
+        masks = masks.reshape(-1,1)
+        
+        joint = np.concatenate((img, masks), axis=1)
+        
+        result = pd.DataFrame(joint)
+        
+        result.columns = ["intensity", "mask"]
+        
+        return result.groupby("mask").mean()
+
 class Experiment:
     
-    def __init__(self, path):
+    def __init__(self, path, ...):
         self.path = path
         self.images = []
+        self.detector = CellposeDetector(params)
+        self.analyzer = Analyzer()
         
     def get_images(self):
         pass
     
     def analyse(self):
-        pass   
+        # végigmegyünk sejteken
+        # beolvassuk egyenként
+            # detektálja a maszkokat self.detector 
+            # analizálja a képeket self.analyzer
+            
+        # az analíziseket concatenálja
+        
+        self.results
+        
+    def plot_hist(self):
+        pass
+    
+   
     
