@@ -74,21 +74,16 @@ class XpressImage(Image):
         img = io.imread_collection(matches)
         img = (np.stack(img, axis=2))
         
-        #jó ötletnek tűntek a következőek, de ha nem teszem bele, akkor simán működik minden.
-        #levonjuk a minimum értékeket, leklippeljük 0-255-re, és konvertálunk integerré (kerekítve)
-        #mindezt külön-külön a csatornákon, mert nagy a szórás a min-max értékeikben        
-        
-        #channels=img.shape[-1]
-
-        #for i in range(channels):
-         #   img[:,:,i]= np.rint ( (np.clip( (img[:,:,i] - img[:,:,i].min() ),0,255) ) ).astype(int)
-
-        
+               
         self.image=img
                
     def display_ximage(self):
-
-        #létrehozunk egy arrayt a kép dimenzióival
+        """
+        Az Ximage esetén létrehoz a 3 csatornából egy képet. Elsősorban debugging céljából került be.
+        """
+   
+    
+    #létrehozunk egy arrayt a kép dimenzióival
         dim1=self.image.shape[0]
         dim2=self.image.shape[1]
         img=np.zeros((dim1,dim2))
@@ -155,9 +150,10 @@ class CellposeDetector(Detector):
             self.channels[0] = self.cell_channel + 1
         if self.nucleus_channel != None:
             self.channels[1] = self.nucleus_channel + 1
-            
-        self.cell_model = models.Cellpose(gpu=False, model_type='cyto')
-        self.nucleus_model = models.Cellpose(gpu=False, model_type='nuclei')
+      
+    #gpu TRUE!!!      
+        self.cell_model = models.Cellpose(gpu=True, model_type='cyto')
+        self.nucleus_model = models.Cellpose(gpu=True, model_type='nuclei')
 
         
     def detect_cells(self, image, diameter=100):
@@ -167,7 +163,9 @@ class CellposeDetector(Detector):
     def detect_nuclei(self, image, diameter=100):
         nuclear_masks, __, __, __ = self.nucleus_model.eval(image, diameter=diameter, channels=self.channels)
         return nuclear_masks
-   
+
+    
+
 class Analyzer:
     
     def __init__(self):
@@ -187,7 +185,7 @@ class Analyzer:
 
 class Experiment:
     
-    def __init__(self, path, ...):
+    def __init__(self, path ):
         self.path = path
         self.images = []
         self.detector = CellposeDetector(params)
