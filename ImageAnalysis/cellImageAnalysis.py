@@ -182,30 +182,58 @@ class Analyzer:
         
         return result.groupby("mask").mean()
 
+    
 class Experiment:
+    """
+    Uses other classes (written for this demo) to tell the fluorescence intensity of cells.
+    Needs only the path to the folder with pictures.
+    
+    """
     
     def __init__(self, path ):
         self.path = path
-        self.images = []
-        self.detector = CellposeDetector(params)
+        
+        #meghívjuk a detectort és az analizert
+        self.detector = CellposeDetector()
         self.analyzer = Analyzer()
         
+        #dataframe az eredmények gyűjtésére
+        self.result = pd.DataFrame()
+                        
+        
     def get_images(self):
-        pass
+        #összeszedjük a képeket a mappából; jól bevált list comprehension
+        self.images = [f for f in listdir(self.path) if isfile(join(self.path, f)) and  f.endswith(".tif")]
+        print (len(self.images), "db képet találtunk, ezek: ", self.images)
     
-    def analyse(self):
-        # végigmegyünk sejteken
-        # beolvassuk egyenként
-            # detektálja a maszkokat self.detector 
-            # analizálja a képeket self.analyzer
+    
+    
+    def analyse (self):
+        #végigmegy a képeken
+        for i in self.images:
+            name = join(self.path, i )
+                        
+            #mivel a ciklusban van számítás elrejtve sok, jelezgetjük, hogy történik valami
+            print(name, "loaded")
             
-        # az analíziseket concatenálja
+            #betölt
+            a = Image(name)
+            a.load_image()
+            #csatornákat összerakjuk, így határozunk meg intenzitást
+            cell = a.image[:,:,0] + a.image[:,:,1]
+            
+            #itt kezdődik az "analízis";
+            #sejtmaszkok
+            masks = self.detector.detect_cells(a.image)
+            
+            #intenzitás értékek kiszámolása
+            #berakjuk az eredményeket a tárolóba
+            self.result[i] = self.analyzer.get_cell_fluorescence(cell, masks)
+            
+            #mivel a ciklusban van számítás elrejtve sok, jelezgetjük, hogy történik valami
+            print(name, "processed")
         
-        self.results
-        
-        
-        
-        
+        print ("Process ended! You can get the results with '.result'.")
         
     def plot_hist(self):
         pass
