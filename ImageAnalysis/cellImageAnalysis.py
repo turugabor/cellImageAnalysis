@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 from skimage import io
 import numpy as np
+import pandas as pd
 
 from skimage.filters import threshold_mean
 from skimage.morphology import binary_closing, binary_opening
@@ -81,9 +82,7 @@ class XpressImage(Image):
         """
         Az Ximage esetén létrehoz a 3 csatornából egy képet. Elsősorban debugging céljából került be.
         """
-   
-    
-    #létrehozunk egy arrayt a kép dimenzióival
+        #létrehozunk egy arrayt a kép dimenzióival
         dim1=self.image.shape[0]
         dim2=self.image.shape[1]
         img=np.zeros((dim1,dim2))
@@ -203,6 +202,10 @@ class Experiment:
         # az analíziseket concatenálja
         
         self.results
+        
+        
+        
+        
         
     def plot_hist(self):
         pass
