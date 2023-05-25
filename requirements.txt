@@ -4,4 +4,4 @@ seaborn
 matplotlib
 scikit-image
 
-cellpose
+#cellpose

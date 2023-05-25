@@ -190,11 +190,14 @@ class Experiment:
     
     """
     
-    def __init__(self, path ):
+    def __init__(self, path, cell_channel=None, nucleus_channel=None, signal_channel=None):
         self.path = path
+        self.cell_channel = cell_channel 
+        self.signal_channel = signal_channel
+        self.nucleus_channel = nucleus_channel
         
         #meghívjuk a detectort és az analizert
-        self.detector = CellposeDetector()
+        self.detector = CellposeDetector(self.cell_channel, self.nucleus_channel)
         self.analyzer = Analyzer()
         
         #dataframe az eredmények gyűjtésére
@@ -220,7 +223,7 @@ class Experiment:
             a = Image(name)
             a.load_image()
             #csatornákat összerakjuk, így határozunk meg intenzitást
-            cell = a.image[:,:,0] + a.image[:,:,1]
+#             cell = a.image[:,:,0] + a.image[:,:,1]
             
             #itt kezdődik az "analízis";
             #sejtmaszkok
@@ -228,7 +231,7 @@ class Experiment:
             
             #intenzitás értékek kiszámolása
             #berakjuk az eredményeket a tárolóba
-            self.result[i] = self.analyzer.get_cell_fluorescence(cell, masks)
+            self.result[i] = self.analyzer.get_cell_fluorescence(a.image[:,:,self.signal_channel], masks)
             
             #mivel a ciklusban van számítás elrejtve sok, jelezgetjük, hogy történik valami
             print(name, "processed")
