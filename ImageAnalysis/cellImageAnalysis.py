@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 from skimage import io
 import numpy as np
+import pandas as pd
 
 from skimage.filters import threshold_mean
 from skimage.morphology import binary_closing, binary_opening
@@ -74,20 +75,13 @@ class XpressImage(Image):
         img = io.imread_collection(matches)
         img = (np.stack(img, axis=2))
         
-        #jó ötletnek tűntek a következőek, de ha nem teszem bele, akkor simán működik minden.
-        #levonjuk a minimum értékeket, leklippeljük 0-255-re, és konvertálunk integerré (kerekítve)
-        #mindezt külön-külön a csatornákon, mert nagy a szórás a min-max értékeikben        
-        
-        #channels=img.shape[-1]
-
-        #for i in range(channels):
-         #   img[:,:,i]= np.rint ( (np.clip( (img[:,:,i] - img[:,:,i].min() ),0,255) ) ).astype(int)
-
-        
+               
         self.image=img
                
     def display_ximage(self):
-
+        """
+        Az Ximage esetén létrehoz a 3 csatornából egy képet. Elsősorban debugging céljából került be.
+        """
         #létrehozunk egy arrayt a kép dimenzióival
         dim1=self.image.shape[0]
         dim2=self.image.shape[1]
@@ -155,9 +149,10 @@ class CellposeDetector(Detector):
             self.channels[0] = self.cell_channel + 1
         if self.nucleus_channel != None:
             self.channels[1] = self.nucleus_channel + 1
-            
-        self.cell_model = models.Cellpose(gpu=False, model_type='cyto')
-        self.nucleus_model = models.Cellpose(gpu=False, model_type='nuclei')
+      
+    #gpu TRUE!!!      
+        self.cell_model = models.Cellpose(gpu=True, model_type='cyto')
+        self.nucleus_model = models.Cellpose(gpu=True, model_type='nuclei')
 
         
     def detect_cells(self, image, diameter=100):
@@ -167,7 +162,9 @@ class CellposeDetector(Detector):
     def detect_nuclei(self, image, diameter=100):
         nuclear_masks, __, __, __ = self.nucleus_model.eval(image, diameter=diameter, channels=self.channels)
         return nuclear_masks
-   
+
+    
+
 class Analyzer:
     
     def __init__(self):
@@ -185,26 +182,58 @@ class Analyzer:
         
         return result.groupby("mask").mean()
 
-class Experiment:
     
-    def __init__(self, path, ...):
+class Experiment:
+    """
+    Uses other classes (written for this demo) to tell the fluorescence intensity of cells.
+    Needs only the path to the folder with pictures.
+    
+    """
+    
+    def __init__(self, path ):
         self.path = path
-        self.images = []
-        self.detector = CellposeDetector(params)
+        
+        #meghívjuk a detectort és az analizert
+        self.detector = CellposeDetector()
         self.analyzer = Analyzer()
         
-    def get_images(self):
-        pass
-    
-    def analyse(self):
-        # végigmegyünk sejteken
-        # beolvassuk egyenként
-            # detektálja a maszkokat self.detector 
-            # analizálja a képeket self.analyzer
-            
-        # az analíziseket concatenálja
+        #dataframe az eredmények gyűjtésére
+        self.result = pd.DataFrame()
+                        
         
-        self.results
+    def get_images(self):
+        #összeszedjük a képeket a mappából; jól bevált list comprehension
+        self.images = [f for f in listdir(self.path) if isfile(join(self.path, f)) and  f.endswith(".tif")]
+        print (len(self.images), "db képet találtunk, ezek: ", self.images)
+    
+    
+    
+    def analyse (self):
+        #végigmegy a képeken
+        for i in self.images:
+            name = join(self.path, i )
+                        
+            #mivel a ciklusban van számítás elrejtve sok, jelezgetjük, hogy történik valami
+            print(name, "loaded")
+            
+            #betölt
+            a = Image(name)
+            a.load_image()
+            #csatornákat összerakjuk, így határozunk meg intenzitást
+            cell = a.image[:,:,0] + a.image[:,:,1]
+            
+            #itt kezdődik az "analízis";
+            #sejtmaszkok
+            masks = self.detector.detect_cells(a.image)
+            
+            #intenzitás értékek kiszámolása
+            #berakjuk az eredményeket a tárolóba
+            self.result[i] = self.analyzer.get_cell_fluorescence(cell, masks)
+            
+            #mivel a ciklusban van számítás elrejtve sok, jelezgetjük, hogy történik valami
+            print(name, "processed")
+        
+        print ("Process ended! You can get the results with '.result'.")
         
     def plot_hist(self):
         pass

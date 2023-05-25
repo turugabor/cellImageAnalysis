@@ -1,5 +1,5 @@
 from setuptools import setup
 
 setup(name="cellImageAnalysis",
-      version="0.0",
-      packages=["Classes"])
+      version="0.2",
+      packages=["ImageAnalysis"])
